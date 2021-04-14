@@ -59,7 +59,7 @@ protected:
 
 public:
 
-	mMain(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("TEORIA DE JUEGOS - GRUPO 3"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(850, 364), long style = wxDEFAULT_FRAME_STYLE | wxTAB_TRAVERSAL);
+	mMain(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("TEORIA DE JUEGOS"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(850, 364), long style = wxDEFAULT_FRAME_STYLE | wxTAB_TRAVERSAL);
 	~mMain();
 
 };
