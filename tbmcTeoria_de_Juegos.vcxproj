@@ -30,6 +30,9 @@
     <ClCompile Include="mMain.cpp" />
     <ClCompile Include="nashResolver.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="iconoMCexe.ico" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>

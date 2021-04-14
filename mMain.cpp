@@ -137,6 +137,8 @@ mMain::mMain(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoi
 
 	neP1 = neP2 = 3;
 
+	this->SetIcon(wxIcon(wxT("iconoMCexe.ico"),wxBITMAP_TYPE_ICO));
+
 	this->SetSizeHints(wxSize(850, 364), wxSize(850, 364));
 	this->SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNHIGHLIGHT));
 
