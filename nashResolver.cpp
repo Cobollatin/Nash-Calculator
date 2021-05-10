@@ -44,7 +44,6 @@ void biMatrixNashEquilibria
 		}
 	}
 	int p;
-	double sum1 = 0;
 	//A^{_}
 	for (int x = 0; x < sizeX; x++)
 	{
@@ -58,7 +57,6 @@ void biMatrixNashEquilibria
 		_p1[p][x] = aux;
 	}
 	//B^{_}
-	double sum2 = 0;
 	for (int y = 0; y < sizeY; y++)
 	{
 		aux = -M;
