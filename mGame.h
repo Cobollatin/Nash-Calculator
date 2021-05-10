@@ -18,5 +18,5 @@ public:
 	mGame(double** p1, double** p2, int x, int y);
 	~mGame();
 	void Compute(bool _mode);
-	std::string get_result();
+	std::string get_result(bool inverted);
 };

@@ -14,11 +14,13 @@ void mMain::ClickCalcular(wxCommandEvent& event)
 			p2[i][j] = wxAtoi(TablaJ2->GetCellValue(i, j));
 		}
 	}
-	
-	mGame* juego = new mGame(p1, p2, neP1, neP2);
-	bool mode = Pura->GetValue();
-	juego->Compute(mode);
-	std::string output = juego->get_result();
+	mGame* juego;
+	if(invertir->GetValue())
+		juego = new mGame(p1, p2, neP1, neP2);
+	else
+		juego = new mGame(p2, p1, neP2, neP1);
+	juego->Compute(Pura->GetValue());
+	std::string output = juego->get_result(invertir->GetValue());
 	Resultado->AppendText(wxString(output));
 	Resultado->Refresh();
 
@@ -31,13 +33,16 @@ void mMain::ClickLimpiar(wxCommandEvent& event)
 	TablaJ1->ClearGrid();
 	TablaJ2->ClearGrid();
 	Resultado->Clear();
+
+	TablaJ1->Refresh();
+	TablaJ2->Refresh();
+	Resultado->Refresh();
+
 	event.Skip();
 }
 
 void mMain::ClickMatrices(wxCommandEvent& event)
 {
-	TablaJ1->ForceRefresh();
-	TablaJ2->ForceRefresh();
 	wxDialog* d = new wxDialog(this, wxID_ANY, wxT("Matrices"), wxDefaultPosition, wxSize(300,140));
 
 	
@@ -78,54 +83,43 @@ void mMain::ClickMatrices(wxCommandEvent& event)
 
 void mMain::CambiarGrid(wxCommandEvent& event)
 {
-	TablaJ1->ForceRefresh();
-	TablaJ2->ForceRefresh();
 	int _neP1 = wxAtoi(((wxTextCtrl*)wxWindow::FindWindowById(10001))->GetValue());
 	int _neP2 = wxAtoi(((wxTextCtrl*)wxWindow::FindWindowById(10002))->GetValue());
 	if (_neP1 > 1 && _neP2 > 1)
 	{
 		if (neP1 < _neP1)
-		{
 			while (neP1 < _neP1)
 			{
 				TablaJ1->AppendRows();
 				TablaJ2->AppendRows();
 				neP1++;
 			}
-		}
 		else
-		{
 			while (neP1 > _neP1)
 			{
 				TablaJ1->DeleteRows();
 				TablaJ2->DeleteRows();
 				neP1--;
 			}
-		}
 		if (neP2 < _neP2)
-		{
 			while (neP2 < _neP2)
 			{
 				TablaJ1->AppendCols();
 				TablaJ2->AppendCols();
 				neP2++;
 			}
-		}
 		else
-		{
 			while (neP2 > _neP2)
 			{
 				TablaJ1->DeleteCols();
 				TablaJ2->DeleteCols();
 				neP2--;
 			}
-		}
 	}
 	else
-	{
 		wxMessageBox(wxT("Rango invalido (debe ser mayor a 1)"), wxT("Error"),
 			wxOK | wxICON_INFORMATION, this);
-	}
+
 	TablaJ1->ForceRefresh();
 	TablaJ2->ForceRefresh();
 
@@ -135,7 +129,7 @@ void mMain::CambiarGrid(wxCommandEvent& event)
 mMain::mMain(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) : wxFrame(parent, id, title, pos, size, style)
 {
 
-	neP1 = neP2 = 3;
+	neP1 = neP2 = 2;
 
 	this->SetIcon(wxIcon(wxT("iconoMCexe.ico"),wxBITMAP_TYPE_ICO));
 
@@ -148,6 +142,7 @@ mMain::mMain(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoi
 	wxBoxSizer* bSizer2;
 	bSizer2 = new wxBoxSizer(wxVERTICAL);
 
+	wxStaticText* Jugador1;
 	Jugador1 = new wxStaticText(this, wxID_ANY, wxT("Jugador 1"), wxDefaultPosition, wxDefaultSize, 0);
 	Jugador1->Wrap(-1);
 	bSizer2->Add(Jugador1, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
@@ -155,7 +150,7 @@ mMain::mMain(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoi
 	TablaJ1 = new wxGrid(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0);
 
 	// Grid
-	TablaJ1->CreateGrid(3, 3);
+	TablaJ1->CreateGrid(neP1, neP2);
 	TablaJ1->EnableEditing(true);
 	TablaJ1->EnableGridLines(true);
 	TablaJ1->EnableDragGridSize(false);
@@ -190,6 +185,7 @@ mMain::mMain(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoi
 	wxBoxSizer* bSizer3;
 	bSizer3 = new wxBoxSizer(wxVERTICAL);
 
+	wxStaticText* Jugador2;
 	Jugador2 = new wxStaticText(this, wxID_ANY, wxT("Jugador 2"), wxDefaultPosition, wxDefaultSize, 0);
 	Jugador2->Wrap(-1);
 	bSizer3->Add(Jugador2, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
@@ -197,7 +193,7 @@ mMain::mMain(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoi
 	TablaJ2 = new wxGrid(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0);
 
 	// Grid
-	TablaJ2->CreateGrid(3, 3);
+	TablaJ2->CreateGrid(neP1, neP2);
 	TablaJ2->EnableEditing(true);
 	TablaJ2->EnableGridLines(true);
 	TablaJ2->EnableDragGridSize(false);
@@ -220,6 +216,7 @@ mMain::mMain(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoi
 	TablaJ2->SetDefaultCellAlignment(wxALIGN_LEFT, wxALIGN_TOP);
 	bSizer3->Add(TablaJ2, 0, wxALL, 30);
 
+	wxStaticText* Resultado_label;
 	Resultado_label = new wxStaticText(this, wxID_ANY, wxT("Resultado"), wxDefaultPosition, wxDefaultSize, 0);
 	Resultado_label->Wrap(-1);
 	bSizer3->Add(Resultado_label, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
@@ -237,6 +234,7 @@ mMain::mMain(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoi
 	wxBoxSizer* bSizer4;
 	bSizer4 = new wxBoxSizer(wxVERTICAL);
 
+	wxStaticText* Estrategia;
 	Estrategia = new wxStaticText(this, wxID_ANY, wxT("Modo"), wxDefaultPosition, wxDefaultSize, 0);
 	Estrategia->Wrap(-1);
 	bSizer4->Add(Estrategia, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 15);
@@ -245,12 +243,16 @@ mMain::mMain(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoi
 	bSizer4->Add(Pura, 0, wxALL, 10);
 	Pura->SetValue(true);
 
+	wxRadioButton* Mixta;
 	Mixta = new wxRadioButton(this, wxID_ANY, wxT("Mixta"), wxDefaultPosition, wxDefaultSize, 0);
 	bSizer4->Add(Mixta, 0, wxALL, 10);
 	Mixta->SetValue(false);
 
-	bSizer1->Add(bSizer4, 1, wxEXPAND, 5);
+	invertir = new wxCheckBox(this, wxID_ANY, wxT("Invertir estrategias"), wxDefaultPosition, wxDefaultSize, 0);
+	bSizer4->Add(invertir, 0, wxALL, 10);
+	invertir->SetValue(false);
 
+	bSizer1->Add(bSizer4, 1, wxEXPAND, 5);
 
 	this->SetSizer(bSizer1);
 	this->Layout();
@@ -263,7 +265,6 @@ mMain::mMain(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoi
 	m_menubar1->Append(matrices, wxT("Matrices"));
 
 	this->SetMenuBar(m_menubar1);
-
 
 	this->Centre(wxBOTH);
 

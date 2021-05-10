@@ -37,20 +37,15 @@ private:
 	int neP2;
 
 protected:
-	wxStaticText* Jugador1;
 	wxGrid* TablaJ1;
 	wxButton* Calcular;
 	wxButton* Limpiar;
-	wxStaticText* Jugador2;
 	wxGrid* TablaJ2;
-	wxStaticText* Resultado_label;
 	wxRichTextCtrl* Resultado;
-	wxStaticText* Estrategia;
 	wxRadioButton* Pura;
-	wxRadioButton* Mixta;
+	wxCheckBox* invertir;
 	wxMenuBar* m_menubar1;
 	wxMenu* matrices;
-
 	
 	void ClickCalcular(wxCommandEvent& event);
 	void ClickLimpiar(wxCommandEvent& event);
