@@ -56,15 +56,16 @@ std::string mGame::get_result(bool inverted)
         output.append("Solucion usando estrategias mixtas: \n\n");
         output.append("Jugador 1: \n");
         char letter;
-        for (int i = 0; i < sizeX; i++)
+        if (inverted)
         {
-            if (inverted)
+            for (int i = 0; i < sizeY; i++)
             {
                 output.append("Estrategia " + std::to_string(i + 1) + ": { ");
                 output.append(std::to_string(result[i + sizeX]));
                 output.append(" }\n");
             }
-            else
+            output.append("Jugador 2: \n");
+            for (int i = 0; i < sizeX; i++)
             {
                 letter = 'A';
                 output.append("Estrategia ");
@@ -74,10 +75,9 @@ std::string mGame::get_result(bool inverted)
                 output.append(" }\n");
             }
         }
-        output.append("Jugador 2: \n");
-        for (int i = 0; i < sizeY; i++)
+        else
         {
-            if (inverted)
+            for (int i = 0; i < sizeX; i++)
             {
                 letter = 'A';
                 output.append("Estrategia ");
@@ -86,14 +86,15 @@ std::string mGame::get_result(bool inverted)
                 output.append(std::to_string(result[i]));
                 output.append(" }\n");
             }
-            else
+            output.append("Jugador 2: \n");
+            for (int i = 0; i < sizeY; i++)
             {
                 output.append("Estrategia " + std::to_string(i + 1) + ": { ");
                 output.append(std::to_string(result[i + sizeX]));
                 output.append(" }\n");
             }
-
         }
+        
     }
     output.append("///////////////////////////////////\n\n");
     return output;

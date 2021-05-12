@@ -20,8 +20,7 @@ void mMain::ClickCalcular(wxCommandEvent& event)
 	else
 		juego = new mGame(p2, p1, neP2, neP1);
 	juego->Compute(Pura->GetValue());
-	std::string output = juego->get_result(invertir->GetValue());
-	Resultado->AppendText(wxString(output));
+	Resultado->AppendText(wxString(juego->get_result(invertir->GetValue())));
 	Resultado->Refresh();
 
 	delete juego;

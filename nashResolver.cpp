@@ -43,7 +43,7 @@ void biMatrixNashEquilibria
 			_p2[y][x] = -M;
 		}
 	}
-	int p;
+	int p{ 0 };
 	//A^{_}
 	for (int x = 0; x < sizeX; x++)
 	{
@@ -57,6 +57,7 @@ void biMatrixNashEquilibria
 		_p1[p][x] = aux;
 	}
 	//B^{_}
+	p = 0;
 	for (int y = 0; y < sizeY; y++)
 	{
 		aux = -M;
