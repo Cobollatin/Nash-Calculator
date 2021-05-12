@@ -132,8 +132,9 @@ mMain::mMain(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoi
 
 	this->SetIcon(wxIcon(wxT("iconoMCexe.ico"),wxBITMAP_TYPE_ICO));
 
-	this->SetSizeHints(wxSize(850, 364), wxSize(850, 364));
+	this->SetSizeHints(wxSize(800, 600), wxSize(800, 600));
 	this->SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNHIGHLIGHT));
+	this->Maximize(false);
 
 	wxBoxSizer* bSizer1;
 	bSizer1 = new wxBoxSizer(wxHORIZONTAL);
@@ -146,13 +147,13 @@ mMain::mMain(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoi
 	Jugador1->Wrap(-1);
 	bSizer2->Add(Jugador1, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
 
-	TablaJ1 = new wxGrid(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0);
+	TablaJ1 = new wxGrid(this, wxID_ANY, wxDefaultPosition, wxSize(250,200), 0);
 
 	// Grid
 	TablaJ1->CreateGrid(neP1, neP2);
 	TablaJ1->EnableEditing(true);
 	TablaJ1->EnableGridLines(true);
-	TablaJ1->EnableDragGridSize(false);
+	//TablaJ1->EnableDragGridSize(false);
 	TablaJ1->SetMargins(0, 0);
 
 	// Columns
@@ -163,7 +164,7 @@ mMain::mMain(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoi
 
 	// Rows
 	TablaJ1->EnableDragRowSize(true);
-	TablaJ1->SetRowLabelSize(80);
+	TablaJ1->SetRowLabelSize(20);
 	TablaJ1->SetRowLabelAlignment(wxALIGN_CENTER, wxALIGN_CENTER);
 
 	// Label Appearance
@@ -189,13 +190,13 @@ mMain::mMain(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoi
 	Jugador2->Wrap(-1);
 	bSizer3->Add(Jugador2, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
 
-	TablaJ2 = new wxGrid(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0);
+	TablaJ2 = new wxGrid(this, wxID_ANY, wxDefaultPosition, wxSize(250, 200), 0);
 
 	// Grid
 	TablaJ2->CreateGrid(neP1, neP2);
 	TablaJ2->EnableEditing(true);
 	TablaJ2->EnableGridLines(true);
-	TablaJ2->EnableDragGridSize(false);
+	//TablaJ2->EnableDragGridSize(false);
 	TablaJ2->SetMargins(0, 0);
 
 	// Columns
@@ -206,7 +207,7 @@ mMain::mMain(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoi
 
 	// Rows
 	TablaJ2->EnableDragRowSize(true);
-	TablaJ2->SetRowLabelSize(80);
+	TablaJ2->SetRowLabelSize(20);
 	TablaJ2->SetRowLabelAlignment(wxALIGN_CENTER, wxALIGN_CENTER);
 
 	// Label Appearance
