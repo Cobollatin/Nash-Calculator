@@ -1,4 +1,4 @@
- /* Formalidad o algo asi.
+ /* Formalidad, cualquier contacto a: Cobollatin@gmail.com
  
     Copyright (C) 2021  Adrian Marquina Vichino
 
