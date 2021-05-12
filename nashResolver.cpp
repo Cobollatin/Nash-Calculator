@@ -82,31 +82,28 @@ void biMatrixNashEquilibria
 	}
 	else
 	{
-		aux = 0;
 		double sum{ 0 };
-		for (int y = 0; y < sizeY; y++)
-			for (int x = 0; x < sizeX; x++)
+		for (int x = 0; x < sizeX; x++)
+			for (int y = 0; y < sizeY; y++)
 				if (_p1[y][x] > -M)
-					aux += _p1[y][x];
-		sum = aux;
-		for (int y = 0; y < sizeY; y++)
+					sum += _p1[y][x];
+		for (int x = 0; x < sizeX; x++)
 		{
 			aux = 0;
-			for (int x = 0; x < sizeX; x++)
+			for (int y = 0; y < sizeY; y++)
 				if (_p1[y][x] > -M)
 					aux += _p1[y][x];
 			pushback_double(aux / sum, result, sizeResult);
 		}
-		aux = 0;
-		for (int x = 0; x < sizeX; x++)
-			for (int y = 0; y < sizeY; y++)
+		sum = 0;
+		for (int y = 0; y < sizeY; y++)
+			for (int x = 0; x < sizeX; x++)
 				if (_p2[y][x] > -M)
-					aux += _p2[y][x];
-		sum = aux;
-		for (int x = 0; x < sizeX; x++)
+					sum += _p2[y][x];
+		for (int y = 0; y < sizeY; y++)
 		{
 			aux = 0;
-			for (int y = 0; y < sizeY; y++)
+			for (int x = 0; x < sizeX; x++)
 				if (_p2[y][x] > -M)
 					aux += _p2[y][x];
 			pushback_double(aux / sum, result, sizeResult);
