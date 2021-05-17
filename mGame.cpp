@@ -58,14 +58,14 @@ std::string mGame::get_result(bool inverted)
         char letter;
         if (inverted)
         {
-            for (int i = 0; i < sizeY; i++)
+            for (int i = 0; i < sizeX; i++)
             {
                 output.append("Estrategia " + std::to_string(i + 1) + ": { ");
                 output.append(std::to_string(result[i + sizeX]));
                 output.append(" }\n");
             }
             output.append("Jugador 2: \n");
-            for (int i = 0; i < sizeX; i++)
+            for (int i = 0; i < sizeY; i++)
             {
                 letter = 'A';
                 output.append("Estrategia ");
