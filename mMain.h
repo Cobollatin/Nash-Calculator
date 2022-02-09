@@ -23,10 +23,10 @@
 #include <wx/richtext/richtextctrl.h>
 #endif
 
-#ifndef MGAME
-#define MGAME
-#include "mGame.h"
-#endif // !
+
+#include "nashResolver.h"
+#include <vector>
+#include <filesystem>
 
 
 

@@ -21,9 +21,6 @@
     <ClInclude Include="mMain.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="mGame.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="nashResolver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -33,9 +30,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="mMain.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="mGame.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="nashResolver.cpp">

@@ -1,112 +1,243 @@
 #include "nashResolver.h"
-void pushback_double(double const d, double** c, int& size)
-{
-	double* aux = new double[size];
-	for (int i = 0; i < size; i++)
-		aux[i] = (*c)[i];
-	delete[] *c;
-	*c = new double[size + 1];
-	for (int i = 0; i < size; i++)
-		(*c)[i] = aux[i];
-	(*c)[size] = d;
-	size += 1;
-	delete[] aux;
-}
 
-void biMatrixNashEquilibria
-(
-	double** result, int& sizeResult, bool mode,
-	double** p1, int sizeX,	double** p2, int sizeY
-)
+void __S_X_BAI_ALGORITHM(const std::vector<double>& p1, const std::vector<double>& p2,
+	const size_t& s1, const size_t& s2, 
+	std::vector<double>* _p1_, std::vector<double>* _p2_, double* M)
 {
-	double M{ 0 };
+	//BASED ON:
+	//https://www.sciencedirect.com/science/article/pii/0898122196001538
+	
 	//M = max_{i,j}(|a_{i,j}|,|b_{i,j}|) + 1
-	double aux{ 0 };
-	for (int y = 0; y < sizeY; ++y)
-		for (int x = 0; x < sizeX; ++x)
-		{
-			aux = std::max(std::abs(p1[y][x]), std::abs(p2[y][x]));
-			if (M < aux)
-				M = aux;
-		}
-	M += 1;
-	//Constructing A^{_} and B^{_}
-	double** _p1 = new double* [sizeY];
-	double** _p2 = new double* [sizeY];
-	for (int y = 0; y < sizeY; y++)
+	*M = 0;
+	for (size_t i = 0; i < s1 * s2; ++i)
 	{
-		_p1[y] = new double[sizeX];
-		_p2[y] = new double[sizeX];
-		for (int x = 0; x < sizeX; x++)
-		{
-			_p1[y][x] = -M;
-			_p2[y][x] = -M;
-		}
+		*M = std::max(*M, std::max(std::abs(p1[i]), std::abs(p2[i])));
 	}
-	int p{ 0 };
+	*M += 1;
+	//Constructing A^{_} and B^{_}
+
 	//A^{_}
-	for (int x = 0; x < sizeX; x++)
+	//a^{_} = a_ij , if a_ij = max_l(a_lj)
+	//		   -M  , otherwise
+	// l: constant
+	for (size_t i = 0; i < s1; ++i)
 	{
-		aux = -M;
-		for (int y = 0; y < sizeY; y++)
-			if (aux < p1[y][x])
+		size_t offset = 0;
+		for (size_t j = 0; j < s2; ++j)
+		{
+			(*_p1_)[i * s2 + j] = -*M;
+			if (p1[i * s2 + j] > p1[i * s2 + offset])
 			{
-				aux = p1[y][x];
-				p = y;
+				offset = j;
 			}
-		_p1[p][x] = aux;
+		}
+		(*_p1_)[i * s2 + offset] = p1[i * s2 + offset];
 	}
 	//B^{_}
-	p = 0;
-	for (int y = 0; y < sizeY; y++)
+	//b^{_} = a_ij , if b_ij = max_l(b_il)
+	//		   -M  , otherwise
+	// l: constant
+	for (size_t j = 0; j < s2; ++j)
 	{
-		aux = -M;
-		for (int x = 0; x < sizeX; x++)
-			if (aux < p2[y][x])
+		size_t offset = 0;
+		for (size_t i = 0; i < s1; ++i)
+		{
+			(*_p2_)[i * s2 + j] = -*M;
+			if (p2[i * s2 + j] > p2[offset * s2 + j])
 			{
-				aux = p2[y][x];
-				p = x;
+				offset = i;
 			}
-		_p2[y][p] = aux;
+		}
+		(*_p2_)[offset * s2 + j] = p2[offset * s2 + j];
 	}
-	sizeResult = 0;
-	if (mode)
+}
+
+void pureNashEquilibria(const std::vector<double>& p1, const std::vector<double>& p2,
+	const size_t& s1, const size_t& s2, std::string* result)
+{
+	//BASED ON:
+	//https://www.sciencedirect.com/science/article/pii/0898122196001538
+
+	double M{ 0 };
+	std::vector<double> _p1_(p1.size());
+	std::vector<double> _p2_(p2.size());
+	
+	__S_X_BAI_ALGORITHM(p1, p2, s1, s2, &_p1_, &_p2_, &M);
+
+	*result = "=====================\n";
+	*result += "Estrategia pura:\n";
+
+	std::vector<std::pair<size_t, size_t>> pairs;
+
+
+	//Definition 1
+	for (size_t i = 0; i < s1; i++)
 	{
-		for (int y = 0; y < sizeY; y++)
-			for (int x = 0; x < sizeX; x++)
-				if (_p1[y][x] > -M && _p2[y][x] > -M)
+		for (size_t j = 0; j < s2; j++)
+		{
+			if (_p1_[i * s2 + j] > -M && _p2_[i * s2 + j] > -M)
+			{
+				pairs.push_back({ i , j });
+			}
+		}
+	}
+
+	//Definition 2 && 3 -- Remove comment to apply
+	for (const std::pair<size_t, size_t>& pair1 : pairs)
+	{
+		/*bool isAdmisible{true};
+		for (const std::pair<size_t, size_t>& pair2 : pairs)
+		{
+			if (p1[pair1.first * s2 + pair1.second] < p1[pair2.first * s2 + pair2.second]
+				&& p2[pair1.first * s2 + pair1.second] < p2[pair2.first * s2 + pair2.second])
+			{
+				isAdmisible = false;
+				break;
+			}
+		}*/
+		//if (isAdmisible)
+		* result += "(" + std::to_string(_p1_[pair1.first * s2 + pair1.second]) + "," + std::to_string(_p2_[pair1.first * s2 + pair1.second]) + ")\n";
+	}
+
+	if (pairs.empty())
+		*result += "No existe equilibrio de nash usando estrategias puras.\n";
+
+	*result += "=====================\n";
+}
+
+void mixedNashEquilibria(const std::vector<double>& p1, const std::vector<double>& p2,
+	const size_t& s1, const size_t& s2, std::string* result)
+{
+	size_t _s1_{ s1 };
+	size_t _s2_{ s2 };
+
+	bool existRowDominated{ true };
+	bool existColDominated{ true };
+
+	std::vector<double> dom_p1(p1);
+	std::vector<double> dom_p2(p2);
+	/*
+	while (existRowDominated || existColDominated)
+	{
+		for (size_t i = 0; i < _s1_ - 1; i++)
+		{
+			for (size_t k = i + 1; k < _s1_; k++)
+			{
+				bool isP1RowDom{ dom_p1[i * _s2_ + 0] > dom_p1[k * _s2_ + 0] };
+				bool isP2RowDom{ dom_p2[i * _s2_ + 0] > dom_p2[k * _s2_ + 0] };
+				for (size_t j = 1; j < _s2_; j++)
 				{
-					pushback_double(_p1[y][x], result, sizeResult);
-					pushback_double(_p2[y][x], result, sizeResult);
+					if (isP1RowDom != dom_p1[i * _s2_ + j] > dom_p1[k * _s2_ + j])
+					{
+						existRowDominated = false;
+					}
+					if (isP2RowDom != dom_p2[i * _s2_ + j] > dom_p2[k * _s2_ + j])
+					{
+						existRowDominated = false;
+					}
+					if ((isP1RowDom != dom_p1[i * _s2_ + j] > dom_p1[k * _s2_ + j])
+						== (isP2RowDom != dom_p2[i * _s2_ + j] > dom_p2[k * _s2_ + j]))
+						break;
 				}
+				if (existRowDominated)
+				{
+					if (isP1RowDom || isP2RowDom)
+					{
+						dom_p1.erase(std::next(dom_p1.begin(), k * _s2_), std::next(dom_p1.begin(), (k + 1) * _s2_));
+						dom_p2.erase(std::next(dom_p2.begin(), k * _s2_), std::next(dom_p2.begin(), (k + 1) * _s2_));
+						_s1_--;
+					}
+					break;
+				}
+			}
+			if (existRowDominated)
+			{
+				break;
+			}
+		}
+
+		for (size_t j = 0; j < _s2_ - 1; j++)
+		{
+			for (size_t k = j + 1; k < _s2_; k++)
+			{
+				bool isP1ColDom{ dom_p1[0 * _s2_ + j] > dom_p1[1 * _s2_ + k] };
+				bool isP2ColDom{ dom_p2[0 * _s2_ + j] > dom_p2[1 * _s2_ + k] };
+				for (size_t i = 1; i < _s1_; i++)
+				{
+					if (isP1ColDom != dom_p1[i * _s2_ + j] > dom_p1[i * _s2_ + k])
+					{
+						existColDominated = false;
+					}
+					if (isP2ColDom != dom_p2[i * _s2_ + j] > dom_p2[i * _s2_ + k])
+					{
+						existColDominated = false;
+					}
+					if ((isP1ColDom != dom_p1[i * _s2_ + j] > dom_p1[i * _s2_ + k])
+						== (isP2ColDom != dom_p2[i * _s2_ + j] > dom_p2[i * _s2_ + k]))
+						break;
+				}
+				if (existColDominated)
+				{
+					if (isP1ColDom || isP2ColDom)
+					{
+						for (size_t i = 0; i < _s1_; i++)
+						{
+							dom_p1.erase(std::next(dom_p1.begin(), i * _s2_ + j));
+							dom_p2.erase(std::next(dom_p1.begin(), i * _s2_ + j));
+						}
+						_s2_--;
+					}
+					break;
+				}
+			}
+			if (existColDominated)
+			{
+				break;
+			}
+		}
 	}
-	else
+	*/
+	double M{ 0 };
+	std::vector<double> _dom_p1_(p1.size());
+	std::vector<double> _dom_p2_(p2.size());
+
+	__S_X_BAI_ALGORITHM(p1, p2, _s1_, _s2_, &_dom_p1_, &_dom_p2_, &M);
+
+	*result = "=====================\n";
+	*result += "Estrategia mixta:\n";
+
+	*result += "Jugador 1(Horizontal)\n";
+
+	double sum{ 0 };
+	for (const double& i: _dom_p1_)
 	{
-		double sum{ 0 };
-		for (int x = 0; x < sizeX; x++)
-			for (int y = 0; y < sizeY; y++)
-				if (_p1[y][x] > -M)
-					sum += _p1[y][x];
-		for (int x = 0; x < sizeX; x++)
+		sum += i * (i > -M);
+	}
+	
+	for (size_t i = 0; i < _s1_; i++)
+	{
+		double current{ 0 };
+		for (size_t j = 0; j < _s2_; j++)
 		{
-			aux = 0;
-			for (int y = 0; y < sizeY; y++)
-				if (_p1[y][x] > -M)
-					aux += _p1[y][x];
-			pushback_double(aux / sum, result, sizeResult);
+			current += _dom_p1_[i * _s2_ + j] * (_dom_p1_[i * _s2_ + j] > -M);
 		}
-		sum = 0;
-		for (int y = 0; y < sizeY; y++)
-			for (int x = 0; x < sizeX; x++)
-				if (_p2[y][x] > -M)
-					sum += _p2[y][x];
-		for (int y = 0; y < sizeY; y++)
+		*result += "Estrategia " + std::to_string(_s1_ - i) + " = " + std::to_string(current / sum) + "\n";
+	}
+
+	*result += "Jugador 2(Vertical)\n";
+
+	sum = 0 ;
+	for (const double& i : _dom_p2_)
+	{
+		sum += i * (i > -M);
+	}
+	for (size_t j = 0; j < _s2_; j++)
+	{
+		double current{ 0 };
+		for (size_t i = 0; i < _s1_; i++)
 		{
-			aux = 0;
-			for (int x = 0; x < sizeX; x++)
-				if (_p2[y][x] > -M)
-					aux += _p2[y][x];
-			pushback_double(aux / sum, result, sizeResult);
+			current += _dom_p2_[i * _s2_ + j] * (_dom_p2_[i * _s2_ + j] > -M);
 		}
+		*result += "Estrategia " + std::string(1, char(_s2_ - j + 'A' - 1)) + " = " + std::to_string(current / sum) + "\n";
 	}
 }

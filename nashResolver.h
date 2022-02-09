@@ -19,13 +19,15 @@
 #define NASH_RESOLVER
 
 #include <algorithm>
+#include <vector>
+#include <string>
+#include <utility>
 
-void pushback_double(double d, double** c, int& size);
-void biMatrixNashEquilibria
-(
-	double** result, int& sizeResult, bool mode,
-	double** p1, int sizeY,	double** p2, int sizeX
-);
+void pureNashEquilibria(const std::vector<double>& p1, const std::vector<double>& p2,
+    const size_t& s1, const size_t& s2, std::string* result);
+
+void mixedNashEquilibria(const std::vector<double>& p1, const std::vector<double>& p2,
+    const size_t& s1, const size_t& s2, std::string* result);
 
 
 #endif // !NASH_RESOLVER

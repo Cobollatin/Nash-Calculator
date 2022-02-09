@@ -2,28 +2,33 @@
 
 void mMain::ClickCalcular(wxCommandEvent& event)
 {
-	double** p1 = new double* [neP1];
-	double** p2 = new double* [neP1];
-	for (int i = 0; i < neP1; i++)
+	std::vector<double> p1(neP1 * neP2);
+	std::vector<double> p2(neP1 * neP2);
+
+	bool isInverted{ invertir->GetValue() };
+
+	for (size_t i = 0; i < neP1; i++)
 	{
-		p1[i] = new double[neP2];
-		p2[i] = new double[neP2];
-		for (int j = 0; j < neP2; j++)
+		for (size_t j = 0; j < neP2; j++)
 		{
-			p1[i][j] = wxAtoi(TablaJ1->GetCellValue(i, j));
-			p2[i][j] = wxAtoi(TablaJ2->GetCellValue(i, j));
+			p1[i * neP2 + j] = wxAtof(TablaJ1->GetCellValue(i, j));
+			p2[i * neP2 + j] = wxAtof(TablaJ2->GetCellValue(i, j));
+			if(isInverted)
+				p1[j * neP1 + i] = wxAtof(TablaJ1->GetCellValue(i, j));
+				p2[j * neP1 + i] = wxAtof(TablaJ2->GetCellValue(i, j));
 		}
 	}
-	mGame* juego;
-	if(invertir->GetValue())
-		juego = new mGame(p1, p2, neP1, neP2);
-	else
-		juego = new mGame(p2, p1, neP2, neP1);
-	juego->Compute(Pura->GetValue());
-	Resultado->AppendText(wxString(juego->get_result(invertir->GetValue())));
-	Resultado->Refresh();
 
-	delete juego;
+	std::swap(neP1, neP2);
+
+	std::string result;
+
+	Pura->GetValue() ? pureNashEquilibria(p1, p2, neP1, neP2,&result) :
+		mixedNashEquilibria(p1, p2, neP1, neP2, &result);
+
+	Resultado->AppendText(wxString(result));
+	Resultado->Refresh();
+	
 	event.Skip();
 }
 
@@ -51,8 +56,8 @@ void mMain::ClickMatrices(wxCommandEvent& event)
 		wxT("# de estrategias jugador 2"), labelP1->GetPosition() + wxPoint(0, 30), wxDefaultSize, 0);
 
 
-	wxBoxSizer* bSizer3;
-	bSizer3 = new wxBoxSizer(wxVERTICAL);
+	wxBoxSizer* bSizer;
+	bSizer = new wxBoxSizer(wxVERTICAL);
 
 	wxTextCtrl* txtJ1 = new wxTextCtrl(d, 10001,
 		wxT(""), labelP1->GetPosition() + wxPoint(150, -5), wxDefaultSize, 0);
@@ -60,8 +65,8 @@ void mMain::ClickMatrices(wxCommandEvent& event)
 	wxTextCtrl* txtJ2 = new wxTextCtrl(d, 10002,
 		wxT(""), labelP2->GetPosition() + wxPoint(150, -5), wxDefaultSize, 0);
 
-	bSizer3->Add(txtJ1, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
-	bSizer3->Add(txtJ2, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
+	bSizer->Add(txtJ1, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
+	bSizer->Add(txtJ2, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
 
 	wxButton* btnRegister = new wxButton(d, wxID_ANY,
 		wxT("Cambiar"), labelP2->GetPosition() + wxPoint(100, 30), wxDefaultSize, 0);
@@ -74,8 +79,11 @@ void mMain::ClickMatrices(wxCommandEvent& event)
 	
 	TablaJ1->ForceRefresh();
 	TablaJ2->ForceRefresh();
+	btnRegister->Disconnect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(mMain::CambiarGrid), NULL, this);
 	
-	delete d;
+	d->Destroy();
+
+	delete bSizer;
 	
 	event.Skip();
 }
@@ -130,7 +138,8 @@ mMain::mMain(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoi
 
 	neP1 = neP2 = 2;
 
-	this->SetIcon(wxIcon(wxT("iconoMCexe.ico"),wxBITMAP_TYPE_ICO));
+	if(std::filesystem::exists("iconoMCexe.ico"))
+		this->SetIcon(wxIcon(wxT("iconoMCexe.ico"),wxBITMAP_TYPE_ICO));
 
 	this->SetSizeHints(wxSize(800, 600), wxSize(800, 600));
 	this->SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNHIGHLIGHT));
@@ -147,7 +156,7 @@ mMain::mMain(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoi
 	Jugador1->Wrap(-1);
 	bSizer2->Add(Jugador1, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
 
-	TablaJ1 = new wxGrid(this, wxID_ANY, wxDefaultPosition, wxSize(250,200), 0);
+	TablaJ1 = new wxGrid(this, wxID_ANY, wxDefaultPosition, wxSize(250,200), wxBORDER_SIMPLE);
 
 	// Grid
 	TablaJ1->CreateGrid(neP1, neP2);
@@ -156,10 +165,11 @@ mMain::mMain(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoi
 	//TablaJ1->EnableDragGridSize(false);
 	TablaJ1->SetMargins(0, 0);
 
+
 	// Columns
 	TablaJ1->EnableDragColMove(false);
 	TablaJ1->EnableDragColSize(true);
-	TablaJ1->SetColLabelSize(30);
+	TablaJ1->SetColLabelSize(20);
 	TablaJ1->SetColLabelAlignment(wxALIGN_CENTER, wxALIGN_CENTER);
 
 	// Rows
@@ -190,7 +200,7 @@ mMain::mMain(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoi
 	Jugador2->Wrap(-1);
 	bSizer3->Add(Jugador2, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
 
-	TablaJ2 = new wxGrid(this, wxID_ANY, wxDefaultPosition, wxSize(250, 200), 0);
+	TablaJ2 = new wxGrid(this, wxID_ANY, wxDefaultPosition, wxSize(250, 200), wxBORDER_SIMPLE);
 
 	// Grid
 	TablaJ2->CreateGrid(neP1, neP2);
@@ -202,7 +212,7 @@ mMain::mMain(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoi
 	// Columns
 	TablaJ2->EnableDragColMove(false);
 	TablaJ2->EnableDragColSize(true);
-	TablaJ2->SetColLabelSize(30);
+	TablaJ2->SetColLabelSize(20);
 	TablaJ2->SetColLabelAlignment(wxALIGN_CENTER, wxALIGN_CENTER);
 
 	// Rows
@@ -268,6 +278,8 @@ mMain::mMain(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoi
 
 	this->Centre(wxBOTH);
 
+	
+
 	// Connect Events
 	Calcular->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(mMain::ClickCalcular), NULL, this);
 	Limpiar->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(mMain::ClickLimpiar), NULL, this);
@@ -278,5 +290,8 @@ mMain::~mMain()
 {
 	Calcular->Disconnect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(mMain::ClickCalcular), NULL, this);
 	Limpiar->Disconnect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(mMain::ClickLimpiar), NULL, this);
+	Disconnect(10000, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(mMain::ClickMatrices), NULL, this);
+
+	this->Destroy();
 }
 
