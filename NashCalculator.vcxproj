@@ -128,8 +128,9 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_WINDOWS;wxMSVC_VERSION_AUTO;WXUSINGDLL;NASH_CALCULATOR_VERSION="1.0.2"</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WINDOWS;wxMSVC_VERSION_AUTO;WXUSINGDLL;NASH_CALCULATOR_VERSION="1.2"</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -142,8 +143,9 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_WINDOWS;wxMSVC_VERSION_AUTO;WXUSINGDLL;NASH_CALCULATOR_VERSION="1.0.2"</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WINDOWS;wxMSVC_VERSION_AUTO;WXUSINGDLL;NASH_CALCULATOR_VERSION="1.2"</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -156,7 +158,7 @@
     <ClCompile>
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>__WIN64__;__VISUALC__;WXUSINGDLL;NASH_CALCULATOR_VERSION="1.0.2"</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__WIN64__;__VISUALC__;WXUSINGDLL;NASH_CALCULATOR_VERSION="1.2"</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
@@ -172,7 +174,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>__WIN64__;__VISUALC__;WXUSINGDLL;NASH_CALCULATOR_VERSION="1.0.2"</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__WIN64__;__VISUALC__;WXUSINGDLL;NASH_CALCULATOR_VERSION="1.2"</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>

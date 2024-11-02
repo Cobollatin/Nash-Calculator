@@ -1,10 +1,70 @@
 #include "mMain.h"
 
+#include <wx/hyperlink.h>
+#include <wx/richmsgdlg.h>
+#include <wx/statbmp.h>
+#include <wx/sizer.h>
+#include <wx/artprov.h>
+
 #include <filesystem>
 
 #include "nashResolver.h"
 
 namespace {
+    class about_dialog final : public wxDialog
+    {
+    public:
+        explicit about_dialog(wxWindow* parent)
+            : wxDialog(parent, wxID_ANY, wxT("About Nash Calculator"), wxDefaultPosition, wxSize(400, 300))
+        {
+            // Main sizer for the entire dialog
+            auto* main_sizer = new wxBoxSizer(wxVERTICAL);
+
+            // Content panel with white background, taking up the full width
+            auto* content_panel = new wxPanel(this, wxID_ANY);
+            content_panel->SetBackgroundColour(*wxWHITE);
+
+            // Content sizer for the white panel
+            auto* content_sizer = new wxBoxSizer(wxVERTICAL);
+
+            // Icon and title sizer
+            auto* top_sizer = new wxBoxSizer(wxHORIZONTAL);
+            auto* icon = new wxStaticBitmap(content_panel, wxID_ANY, wxArtProvider::GetBitmap(wxART_INFORMATION, wxART_MESSAGE_BOX));
+            top_sizer->Add(icon, 0, wxALL, 0);
+
+            // Information text
+            auto* info_sizer = new wxBoxSizer(wxVERTICAL);
+            auto* title_text = new wxStaticText(content_panel, wxID_ANY, wxT("Nash Calculator"));
+            title_text->SetFont(title_text->GetFont().Bold());
+            info_sizer->Add(title_text, 0, wxBOTTOM, 5);
+
+            auto* info_text = new wxStaticText(content_panel, wxID_ANY,
+                wxT("Author: Adrian Marquina Vichino\nLicense: GNU GPL v3\nVersion: ")
+                wxT(NASH_CALCULATOR_VERSION) wxT("\nContact: Cobollatin@gmail.com"));
+            info_sizer->Add(info_text, 0, wxEXPAND);
+
+            top_sizer->Add(info_sizer, 1, wxALIGN_CENTER_VERTICAL | wxLEFT, 5);
+            content_sizer->Add(top_sizer, 0, wxALL | wxEXPAND, 5);
+
+            // Hyperlink for repository, centered and with consistent padding
+            auto* repo_link = new wxHyperlinkCtrl(content_panel, wxID_ANY,
+                wxT("GitHub Repository: https://github.com/Cobollatin/Nash-Calculator"),
+                wxT("https://github.com/Cobollatin/Nash-Calculator"));
+            content_sizer->Add(repo_link, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
+
+            // Set sizer and ensure full width of content panel
+            content_panel->SetSizer(content_sizer);
+            main_sizer->Add(content_panel, 1, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, 5);
+
+            // OK button, centered
+            auto* ok_button = new wxButton(this, wxID_OK, wxT("OK"));
+            main_sizer->Add(ok_button, 0, wxALL | wxALIGN_CENTER, 5);
+
+            SetSizerAndFit(main_sizer);
+            CentreOnParent();
+        }
+    };
+
     void create_default_grid(wxGrid* grid, const int rows, const int cols)
     {
         // Grid
@@ -137,8 +197,8 @@ void m_main::click_matrix_configuration(wxCommandEvent& event)
 
 void m_main::click_about(wxCommandEvent& event)
 {
-    wxMessageBox(wxT("Nash Calculator\n\nAuthor: Adrian Marquina Vichino\n\nLicense: GNU GPL v3\n\nVersion:" NASH_CALCULATOR_VERSION "\n\nContact:Cobollatin@gmail.com"));
-
+    about_dialog about_dlg(this);
+    about_dlg.ShowModal();
     event.Skip();
 }
 
