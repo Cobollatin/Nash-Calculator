@@ -1,10 +1,11 @@
 #include "mApp.h"
+#include "mMain.h"
 
-wxIMPLEMENT_APP(mApp);
+wxIMPLEMENT_APP(m_app);
 
-bool mApp::OnInit()
+bool m_app::OnInit()
 {
-	mMain* mainFrame = new mMain(nullptr);
-	mainFrame->Show(true);
-	return true;
+    const auto main_frame = new m_main(nullptr);
+    main_frame->Show(true);
+    return true;
 }

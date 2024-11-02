@@ -1,297 +1,349 @@
 #include "mMain.h"
 
-void mMain::ClickCalcular(wxCommandEvent& event)
-{
-	std::vector<double> p1(neP1 * neP2);
-	std::vector<double> p2(neP1 * neP2);
+#include <filesystem>
 
-	bool isInverted{ invertir->GetValue() };
+#include "nashResolver.h"
 
-	for (size_t i = 0; i < neP1; i++)
-	{
-		for (size_t j = 0; j < neP2; j++)
-		{
-			p1[i * neP2 + j] = wxAtof(TablaJ1->GetCellValue(i, j));
-			p2[i * neP2 + j] = wxAtof(TablaJ2->GetCellValue(i, j));
-			if(isInverted)
-				p1[j * neP1 + i] = wxAtof(TablaJ1->GetCellValue(i, j));
-				p2[j * neP1 + i] = wxAtof(TablaJ2->GetCellValue(i, j));
-		}
-	}
+namespace {
+    void create_default_grid(wxGrid* grid, const int rows, const int cols)
+    {
+        // Grid
+        grid->CreateGrid(rows, cols);
+        grid->EnableEditing(true);
+        grid->EnableGridLines(true);
+        grid->SetMargins(0, 0);
+        grid->SetDefaultCellAlignment(wxALIGN_LEFT, wxALIGN_TOP);
 
-	std::swap(neP1, neP2);
+        // Columns
+        grid->EnableDragColMove(false);
+        grid->EnableDragColSize(true);
+        grid->SetColLabelSize(20);
+        grid->SetDefaultColSize(20, true);
+        grid->SetColLabelAlignment(wxALIGN_CENTER, wxALIGN_CENTER);
 
-	std::string result;
+        // Rows
+        grid->EnableDragRowSize(true);
+        grid->SetRowLabelSize(20);
+        grid->SetRowLabelAlignment(wxALIGN_CENTER, wxALIGN_CENTER);
+    }
 
-	Pura->GetValue() ? pureNashEquilibria(p1, p2, neP1, neP2,&result) :
-		mixedNashEquilibria(p1, p2, neP1, neP2, &result);
-
-	Resultado->AppendText(wxString(result));
-	Resultado->Refresh();
-	
-	event.Skip();
+    void set_grid_values_to_zero(wxGrid* grid)
+    {
+        for (int i = 0; i < grid->GetNumberRows(); i++)
+        {
+            for (int j = 0; j < grid->GetNumberCols(); j++)
+            {
+                grid->SetCellValue(i, j, "0");
+            }
+        }
+    }
 }
 
-void mMain::ClickLimpiar(wxCommandEvent& event)
+enum m_main_id : uint16_t {
+    id_matrix_configuration = 1000,
+    id_run_tests,
+};
+
+void m_main::click_calculate(wxCommandEvent& event)
 {
-	TablaJ1->ClearGrid();
-	TablaJ2->ClearGrid();
-	Resultado->Clear();
+    std::vector<double> p1(ne_p2_ * ne_p1_);
+    std::vector<double> p2(ne_p2_ * ne_p1_);
 
-	TablaJ1->Refresh();
-	TablaJ2->Refresh();
-	Resultado->Refresh();
+    const bool is_inverted{ invert_->GetValue() };
 
-	event.Skip();
+    for (int i = 0; i < ne_p1_; i++)
+    {
+        for (int j = 0; j < ne_p2_; j++)
+        {
+            p1[i * ne_p2_ + j] = wxAtof(table_j1_->GetCellValue(i, j));
+            p2[i * ne_p2_ + j] = wxAtof(table_j2_->GetCellValue(i, j));
+            if (is_inverted)
+            {
+                p1[j * ne_p1_ + i] = wxAtof(table_j1_->GetCellValue(i, j));
+            }
+            p2[j * ne_p1_ + i] = wxAtof(table_j2_->GetCellValue(i, j));
+        }
+    }
+
+    std::swap(ne_p1_, ne_p2_);
+    std::string result = "Unknown.";
+    if (mode_->GetValue()) {
+        result = calculate_pure_nash_equilibrium(p1, p2, ne_p1_, ne_p2_);
+    }
+    else {
+        result = calculate_mixed_nash_equilibrium(p1, p2, ne_p1_, ne_p2_);
+    }
+
+    result_->AppendText(wxString(result));
+    result_->Refresh();
+
+    event.Skip();
 }
 
-void mMain::ClickMatrices(wxCommandEvent& event)
+void m_main::click_clear(wxCommandEvent& event)
 {
-	wxDialog* d = new wxDialog(this, wxID_ANY, wxT("Matrices"), wxDefaultPosition, wxSize(300,140));
+    table_j1_->ClearGrid();
+    table_j2_->ClearGrid();
+    result_->Clear();
 
-	
-	wxStaticText* labelP1 = new wxStaticText(d, wxID_ANY,
-		wxT("# de estrategias jugador 1"), wxDefaultPosition + wxPoint(10, 10), wxDefaultSize, 0);
-	wxStaticText* labelP2 = new wxStaticText(d, wxID_ANY,
-		wxT("# de estrategias jugador 2"), labelP1->GetPosition() + wxPoint(0, 30), wxDefaultSize, 0);
+    set_grid_values_to_zero(table_j1_);
+    set_grid_values_to_zero(table_j2_);
 
+    table_j1_->Refresh();
+    table_j2_->Refresh();
+    result_->Refresh();
 
-	wxBoxSizer* bSizer;
-	bSizer = new wxBoxSizer(wxVERTICAL);
-
-	wxTextCtrl* txtJ1 = new wxTextCtrl(d, 10001,
-		wxT(""), labelP1->GetPosition() + wxPoint(150, -5), wxDefaultSize, 0);
-	
-	wxTextCtrl* txtJ2 = new wxTextCtrl(d, 10002,
-		wxT(""), labelP2->GetPosition() + wxPoint(150, -5), wxDefaultSize, 0);
-
-	bSizer->Add(txtJ1, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
-	bSizer->Add(txtJ2, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
-
-	wxButton* btnRegister = new wxButton(d, wxID_ANY,
-		wxT("Cambiar"), labelP2->GetPosition() + wxPoint(100, 30), wxDefaultSize, 0);
-
-	btnRegister->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(mMain::CambiarGrid), NULL, this);
-	TablaJ1->ForceRefresh();
-	TablaJ2->ForceRefresh();
-
-	d->ShowModal();
-	
-	TablaJ1->ForceRefresh();
-	TablaJ2->ForceRefresh();
-	btnRegister->Disconnect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(mMain::CambiarGrid), NULL, this);
-	
-	d->Destroy();
-
-	delete bSizer;
-	
-	event.Skip();
+    event.Skip();
 }
 
-void mMain::CambiarGrid(wxCommandEvent& event)
+void m_main::click_matrix_configuration(wxCommandEvent& event)
 {
-	int _neP1 = wxAtoi(((wxTextCtrl*)wxWindow::FindWindowById(10001))->GetValue());
-	int _neP2 = wxAtoi(((wxTextCtrl*)wxWindow::FindWindowById(10002))->GetValue());
-	if (_neP1 > 1 && _neP2 > 1)
-	{
-		if (neP1 < _neP1)
-			while (neP1 < _neP1)
-			{
-				TablaJ1->AppendRows();
-				TablaJ2->AppendRows();
-				neP1++;
-			}
-		else
-			while (neP1 > _neP1)
-			{
-				TablaJ1->DeleteRows();
-				TablaJ2->DeleteRows();
-				neP1--;
-			}
-		if (neP2 < _neP2)
-			while (neP2 < _neP2)
-			{
-				TablaJ1->AppendCols();
-				TablaJ2->AppendCols();
-				neP2++;
-			}
-		else
-			while (neP2 > _neP2)
-			{
-				TablaJ1->DeleteCols();
-				TablaJ2->DeleteCols();
-				neP2--;
-			}
-	}
-	else
-		wxMessageBox(wxT("Rango invalido (debe ser mayor a 1)"), wxT("Error"),
-			wxOK | wxICON_INFORMATION, this);
+    const auto dialog = new wxDialog(this, wxID_ANY, wxT("Matrix"), wxDefaultPosition, wxSize(300, 140));
+    const auto label_p1 = new wxStaticText(dialog, wxID_ANY,
+        wxT("# strategies player 1"), wxDefaultPosition + wxPoint(10, 10), wxDefaultSize, 0);
+    const auto label_p2 = new wxStaticText(dialog, wxID_ANY,
+        wxT("# strategies player 2"), label_p1->GetPosition() + wxPoint(0, 30), wxDefaultSize, 0);
 
-	TablaJ1->ForceRefresh();
-	TablaJ2->ForceRefresh();
+    const auto b_sizer = new wxBoxSizer(wxVERTICAL);
 
-	event.Skip();
+    const auto text_p1 = new wxTextCtrl(dialog, 10001,
+        wxT(""), label_p1->GetPosition() + wxPoint(150, -5), wxDefaultSize, 0);
+
+    const auto text_p2 = new wxTextCtrl(dialog, 10002,
+        wxT(""), label_p2->GetPosition() + wxPoint(150, -5), wxDefaultSize, 0);
+
+    b_sizer->Add(text_p1, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
+    b_sizer->Add(text_p2, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
+
+    const auto btn_register = new wxButton(dialog, wxID_ANY,
+        wxT("Change"), label_p2->GetPosition() + wxPoint(100, 30), wxDefaultSize, 0);
+
+    btn_register->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(m_main::click_change_grid_size), nullptr, this);
+    table_j1_->ForceRefresh();
+    table_j2_->ForceRefresh();
+
+    dialog->ShowModal();
+
+    table_j1_->ForceRefresh();
+    table_j2_->ForceRefresh();
+    btn_register->Disconnect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(m_main::click_change_grid_size), nullptr, this);
+
+    dialog->Destroy();
+
+    delete b_sizer;
+
+    event.Skip();
 }
 
-mMain::mMain(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style) : wxFrame(parent, id, title, pos, size, style)
+void m_main::click_about(wxCommandEvent& event)
 {
+    wxMessageBox(wxT("Nash Calculator\n\nAuthor: Adrian Marquina Vichino\n\nLicense: GNU GPL v3\n\nVersion:" NASH_CALCULATOR_VERSION "\n\nContact:Cobollatin@gmail.com"));
 
-	neP1 = neP2 = 2;
-
-	if(std::filesystem::exists("iconoMCexe.ico"))
-		this->SetIcon(wxIcon(wxT("iconoMCexe.ico"),wxBITMAP_TYPE_ICO));
-
-	this->SetSizeHints(wxSize(800, 600), wxSize(800, 600));
-	this->SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNHIGHLIGHT));
-	this->Maximize(false);
-
-	wxBoxSizer* bSizer1;
-	bSizer1 = new wxBoxSizer(wxHORIZONTAL);
-
-	wxBoxSizer* bSizer2;
-	bSizer2 = new wxBoxSizer(wxVERTICAL);
-
-	wxStaticText* Jugador1;
-	Jugador1 = new wxStaticText(this, wxID_ANY, wxT("Jugador 1"), wxDefaultPosition, wxDefaultSize, 0);
-	Jugador1->Wrap(-1);
-	bSizer2->Add(Jugador1, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
-
-	TablaJ1 = new wxGrid(this, wxID_ANY, wxDefaultPosition, wxSize(250,200), wxBORDER_SIMPLE);
-
-	// Grid
-	TablaJ1->CreateGrid(neP1, neP2);
-	TablaJ1->EnableEditing(true);
-	TablaJ1->EnableGridLines(true);
-	//TablaJ1->EnableDragGridSize(false);
-	TablaJ1->SetMargins(0, 0);
-
-
-	// Columns
-	TablaJ1->EnableDragColMove(false);
-	TablaJ1->EnableDragColSize(true);
-	TablaJ1->SetColLabelSize(20);
-	TablaJ1->SetColLabelAlignment(wxALIGN_CENTER, wxALIGN_CENTER);
-
-	// Rows
-	TablaJ1->EnableDragRowSize(true);
-	TablaJ1->SetRowLabelSize(20);
-	TablaJ1->SetRowLabelAlignment(wxALIGN_CENTER, wxALIGN_CENTER);
-
-	// Label Appearance
-
-	// Cell Defaults
-	TablaJ1->SetDefaultCellAlignment(wxALIGN_LEFT, wxALIGN_TOP);
-	bSizer2->Add(TablaJ1, 0, wxALL, 30);
-
-	Calcular = new wxButton(this, wxID_ANY, wxT("Calcular"), wxDefaultPosition, wxDefaultSize, 0);
-	bSizer2->Add(Calcular, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 15);
-
-	Limpiar = new wxButton(this, wxID_ANY, wxT("Limpiar"), wxDefaultPosition, wxDefaultSize, 0);
-	bSizer2->Add(Limpiar, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 15);
-
-
-	bSizer1->Add(bSizer2, 1, wxEXPAND, 5);
-
-	wxBoxSizer* bSizer3;
-	bSizer3 = new wxBoxSizer(wxVERTICAL);
-
-	wxStaticText* Jugador2;
-	Jugador2 = new wxStaticText(this, wxID_ANY, wxT("Jugador 2"), wxDefaultPosition, wxDefaultSize, 0);
-	Jugador2->Wrap(-1);
-	bSizer3->Add(Jugador2, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
-
-	TablaJ2 = new wxGrid(this, wxID_ANY, wxDefaultPosition, wxSize(250, 200), wxBORDER_SIMPLE);
-
-	// Grid
-	TablaJ2->CreateGrid(neP1, neP2);
-	TablaJ2->EnableEditing(true);
-	TablaJ2->EnableGridLines(true);
-	//TablaJ2->EnableDragGridSize(false);
-	TablaJ2->SetMargins(0, 0);
-
-	// Columns
-	TablaJ2->EnableDragColMove(false);
-	TablaJ2->EnableDragColSize(true);
-	TablaJ2->SetColLabelSize(20);
-	TablaJ2->SetColLabelAlignment(wxALIGN_CENTER, wxALIGN_CENTER);
-
-	// Rows
-	TablaJ2->EnableDragRowSize(true);
-	TablaJ2->SetRowLabelSize(20);
-	TablaJ2->SetRowLabelAlignment(wxALIGN_CENTER, wxALIGN_CENTER);
-
-	// Label Appearance
-
-	// Cell Defaults
-	TablaJ2->SetDefaultCellAlignment(wxALIGN_LEFT, wxALIGN_TOP);
-	bSizer3->Add(TablaJ2, 0, wxALL, 30);
-
-	wxStaticText* Resultado_label;
-	Resultado_label = new wxStaticText(this, wxID_ANY, wxT("Resultado"), wxDefaultPosition, wxDefaultSize, 0);
-	Resultado_label->Wrap(-1);
-	bSizer3->Add(Resultado_label, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
-
-	Resultado = new wxRichTextCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0);
-	Resultado->Enable(true);
-	Resultado->SetEditable(false);
-	Resultado->SetScrollbar(wxVERTICAL, Resultado->GetScrollPos(wxVERTICAL)- Resultado->GetSize().GetHeight(),255,255);
-
-	bSizer3->Add(Resultado, 1, wxALL | wxEXPAND, 5);
-
-
-	bSizer1->Add(bSizer3, 1, wxEXPAND, 5);
-
-	wxBoxSizer* bSizer4;
-	bSizer4 = new wxBoxSizer(wxVERTICAL);
-
-	wxStaticText* Estrategia;
-	Estrategia = new wxStaticText(this, wxID_ANY, wxT("Modo"), wxDefaultPosition, wxDefaultSize, 0);
-	Estrategia->Wrap(-1);
-	bSizer4->Add(Estrategia, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 15);
-
-	Pura = new wxRadioButton(this, wxID_ANY, wxT("Pura"), wxDefaultPosition, wxDefaultSize, 0);
-	bSizer4->Add(Pura, 0, wxALL, 10);
-	Pura->SetValue(true);
-
-	wxRadioButton* Mixta;
-	Mixta = new wxRadioButton(this, wxID_ANY, wxT("Mixta"), wxDefaultPosition, wxDefaultSize, 0);
-	bSizer4->Add(Mixta, 0, wxALL, 10);
-	Mixta->SetValue(false);
-
-	invertir = new wxCheckBox(this, wxID_ANY, wxT("Invertir estrategias"), wxDefaultPosition, wxDefaultSize, 0);
-	bSizer4->Add(invertir, 0, wxALL, 10);
-	invertir->SetValue(false);
-
-	bSizer1->Add(bSizer4, 1, wxEXPAND, 5);
-
-	this->SetSizer(bSizer1);
-	this->Layout();
-	m_menubar1 = new wxMenuBar(0);
-	matrices = new wxMenu();
-	
-
-	matrices->Append(10000, wxString(wxT("Cambiar dimensión")));
-
-	m_menubar1->Append(matrices, wxT("Matrices"));
-
-	this->SetMenuBar(m_menubar1);
-
-	this->Centre(wxBOTH);
-
-	
-
-	// Connect Events
-	Calcular->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(mMain::ClickCalcular), NULL, this);
-	Limpiar->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(mMain::ClickLimpiar), NULL, this);
-	Connect(10000,wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(mMain::ClickMatrices), NULL, this);
+    event.Skip();
 }
 
-mMain::~mMain()
-{
-	Calcular->Disconnect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(mMain::ClickCalcular), NULL, this);
-	Limpiar->Disconnect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(mMain::ClickLimpiar), NULL, this);
-	Disconnect(10000, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(mMain::ClickMatrices), NULL, this);
+void m_main::click_run_tests(wxCommandEvent& event) {
+    result_->AppendText(wxT("===============================================================\n"));
+    result_->AppendText(wxT("TESTS\n"));
+    result_->AppendText(wxT("===============================================================\n"));
 
-	this->Destroy();
+    result_->AppendText(wxString(run_all_tests()));
+
+    result_->AppendText(wxT("TESTS RUN SUCCESSFULLY\n"));
+    result_->AppendText(wxT("===============================================================\n"));
+
+    result_->Refresh();
+
+    event.Skip();
+}
+
+void m_main::click_change_grid_size(wxCommandEvent& event)
+{
+    const int ne_p1 = wxAtoi(dynamic_cast<wxTextCtrl*>(FindWindowById(10001))->GetValue());
+    const int ne_p2 = wxAtoi(dynamic_cast<wxTextCtrl*>(FindWindowById(10002))->GetValue());
+    if (ne_p1 < 1 && ne_p2 < 1)
+    {
+        wxMessageBox(wxT("Invalid range (Should be higher than 1)"), wxT("Error"),
+            wxOK | wxICON_ERROR, this);
+        return;
+    }
+
+    if (ne_p1 > 5 && ne_p2 > 5)
+    {
+        wxMessageBox(wxT("Ranges higher than 5 for player 1 or higher than 5 for player 2 could be difficult to navigate."), wxT("Warning"),
+            wxOK | wxICON_EXCLAMATION, this);
+    }
+
+    if (ne_p1_ < ne_p1)
+    {
+        while (ne_p1_ < ne_p1)
+        {
+            table_j1_->AppendRows();
+            table_j2_->AppendRows();
+            ne_p1_++;
+        }
+    }
+    else
+    {
+        while (ne_p1_ > ne_p1)
+        {
+            table_j1_->DeleteRows();
+            table_j2_->DeleteRows();
+            ne_p1_--;
+        }
+    }
+    if (ne_p2_ < ne_p2)
+    {
+        while (ne_p2_ < ne_p2)
+        {
+            table_j1_->AppendCols();
+            table_j2_->AppendCols();
+            ne_p2_++;
+        }
+    }
+    else
+    {
+        while (ne_p2_ > ne_p2)
+        {
+            table_j1_->DeleteCols();
+            table_j2_->DeleteCols();
+            ne_p2_--;
+        }
+    }
+
+    table_j1_->ForceRefresh();
+    table_j2_->ForceRefresh();
+
+    set_grid_values_to_zero(table_j1_);
+    set_grid_values_to_zero(table_j2_);
+
+    event.Skip();
+}
+
+m_main::m_main(wxWindow* parent, const wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, const long style) : wxFrame(parent, id, title, pos, size, style)
+{
+    ne_p1_ = ne_p2_ = 2;
+
+    if (std::filesystem::exists("icon.ico"))
+    {
+        this->SetIcon(wxIcon(wxT("icon.ico"), wxBITMAP_TYPE_ICO));
+    }
+
+    this->SetSizeHints(wxSize(800, 600), wxSize(800, 600));
+    this->wxWindowBase::SetBackgroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNHIGHLIGHT));
+    this->wxTopLevelWindowMSW::Maximize(false);
+
+    const auto box_sizer = new wxBoxSizer(wxVERTICAL);
+    const auto top_box_sizer = new wxBoxSizer(wxHORIZONTAL);
+    const auto bottom_box_sizer = new wxBoxSizer(wxVERTICAL);
+
+    const auto players_box_sizer = new wxBoxSizer(wxHORIZONTAL);
+    const auto player_1_box_sizer = new wxBoxSizer(wxVERTICAL);
+    const auto player_2_box_sizer = new wxBoxSizer(wxVERTICAL);
+
+    const auto options_box_sizer = new wxBoxSizer(wxVERTICAL);
+
+    box_sizer->Add(top_box_sizer, 1, wxEXPAND, 5);
+    box_sizer->Add(bottom_box_sizer, 1, wxEXPAND, 5);
+
+    top_box_sizer->Add(players_box_sizer, 1, wxEXPAND, 5);
+    top_box_sizer->Add(options_box_sizer, 0, wxEXPAND, 5);
+
+    players_box_sizer->Add(player_1_box_sizer, 1, wxEXPAND, 5);
+    players_box_sizer->Add(player_2_box_sizer, 1, wxEXPAND, 5);
+
+    const auto player_1 = new wxStaticText(this, wxID_ANY, wxT("Player 1"), wxDefaultPosition, wxDefaultSize, 0);
+    player_1->Wrap(-1);
+
+    table_j1_ = new wxGrid(this, wxID_ANY, wxDefaultPosition, wxSize(300, 200), wxBORDER_SIMPLE);
+    create_default_grid(table_j1_, ne_p1_, ne_p2_);
+    set_grid_values_to_zero(table_j1_);
+
+    player_1_box_sizer->Add(player_1, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
+    player_1_box_sizer->Add(table_j1_, 0, wxALL, 15);
+
+    const auto player_2 = new wxStaticText(this, wxID_ANY, wxT("Player 2"), wxDefaultPosition, wxDefaultSize, 0);
+    player_2->Wrap(-1);
+
+    table_j2_ = new wxGrid(this, wxID_ANY, wxDefaultPosition, wxSize(300, 200), wxBORDER_SIMPLE);
+    create_default_grid(table_j2_, ne_p1_, ne_p2_);
+    set_grid_values_to_zero(table_j2_);
+
+    player_2_box_sizer->Add(player_2, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
+    player_2_box_sizer->Add(table_j2_, 0, wxALL, 5);
+
+    const auto mode = new wxStaticText(this, wxID_ANY, wxT("Mode"), wxDefaultPosition, wxDefaultSize, 0);
+    mode->Wrap(-1);
+    options_box_sizer->Add(mode, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 15);
+
+    mode_ = new wxRadioButton(this, wxID_ANY, wxT("Pure"), wxDefaultPosition, wxDefaultSize, 0);
+    options_box_sizer->Add(mode_, 0, wxALL, 5);
+    mode_->SetValue(true);
+
+    const auto mixed = new wxRadioButton(this, wxID_ANY, wxT("Mixed"), wxDefaultPosition, wxDefaultSize, 0);
+    options_box_sizer->Add(mixed, 0, wxALL, 5);
+    mixed->SetValue(false);
+
+    invert_ = new wxCheckBox(this, wxID_ANY, wxT("Invert strategies"), wxDefaultPosition, wxDefaultSize, 0);
+    options_box_sizer->Add(invert_, 0, wxALL, 5);
+    invert_->SetValue(false);
+
+    const auto divider = new wxStaticText(this, wxID_ANY, wxT("-----"), wxDefaultPosition, wxDefaultSize, 0);
+    divider->Wrap(-1);
+    options_box_sizer->Add(divider, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
+
+    const auto actions = new wxStaticText(this, wxID_ANY, wxT("Actions"), wxDefaultPosition, wxDefaultSize, 0);
+    actions->Wrap(-1);
+    options_box_sizer->Add(actions, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
+
+    const auto calculate = new wxButton(this, wxID_ANY, wxT("Calculate"), wxDefaultPosition, wxDefaultSize, 0);
+    options_box_sizer->Add(calculate, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
+
+    const auto clear = new wxButton(this, wxID_ANY, wxT("Clear"), wxDefaultPosition, wxDefaultSize, 0);
+    options_box_sizer->Add(clear, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
+
+    const auto result_label = new wxStaticText(this, wxID_ANY, wxT("Result"), wxDefaultPosition, wxDefaultSize, 0);
+    result_label->Wrap(-1);
+    bottom_box_sizer->Add(result_label, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
+
+    result_ = new wxRichTextCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0);
+    result_->Enable(true);
+    result_->SetEditable(false);
+    result_->SetScrollbar(wxVERTICAL, result_->GetScrollPos(wxVERTICAL) - result_->GetSize().GetHeight(), 255, 255);
+
+    bottom_box_sizer->Add(result_, 1, wxALL | wxEXPAND, 5);
+
+    this->SetSizer(box_sizer);
+    this->wxTopLevelWindowBase::Layout();
+
+    // Menu
+    menu_bar_ = new wxMenuBar(0);
+    matrix_menu_ = new wxMenu();
+    matrix_menu_->Append(id_matrix_configuration, wxString(wxT("Configuration")));
+    menu_bar_->Append(matrix_menu_, wxT("Matrix"));
+    help_menu_ = new wxMenu();
+    help_menu_->Append(id_run_tests, wxString(wxT("Run Tests")));
+    help_menu_->Append(wxID_ABOUT, wxString(wxT("About")));
+    menu_bar_->Append(help_menu_, wxT("Help"));
+    this->wxFrameBase::SetMenuBar(menu_bar_);
+
+    this->Centre(wxBOTH);
+
+    // Connect Events
+    calculate->Connect(wxID_ANY, wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(m_main::click_calculate), nullptr, this);
+    clear->Connect(wxID_ANY, wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(m_main::click_clear), nullptr, this);
+    Connect(id_matrix_configuration, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(m_main::click_matrix_configuration), nullptr, this);
+    Connect(id_run_tests, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(m_main::click_run_tests), nullptr, this);
+    Connect(wxID_ABOUT, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(m_main::click_about), nullptr, this);
+}
+
+m_main::~m_main()
+{
+    Disconnect(wxID_ANY, wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(m_main::click_calculate), nullptr, this);
+    Disconnect(wxID_ANY, wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(m_main::click_clear), nullptr, this);
+    Disconnect(id_matrix_configuration, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(m_main::click_matrix_configuration), nullptr, this);
+    Disconnect(id_run_tests, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(m_main::click_run_tests), nullptr, this);
+    Disconnect(wxID_ABOUT, wxEVT_COMMAND_MENU_SELECTED, wxCommandEventHandler(m_main::click_about), nullptr, this);
+    this->wxTopLevelWindowMSW::Destroy();
 }
 

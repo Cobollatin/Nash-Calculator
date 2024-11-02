@@ -1,14 +1,14 @@
 #pragma once
 
-#ifndef WX_PRECOMP
-	#include <wx/wx.h>
-#endif
+#ifndef NASH_RESOLVER_APP
+#define NASH_RESOLVER_APP
 
-#include "mMain.h"
+#include <wx/wx.h>
 
-class mApp : public wxApp
+class m_app final : public wxApp
 {
 public:
-	virtual bool OnInit();
+    bool OnInit() override;
 };
 
+#endif

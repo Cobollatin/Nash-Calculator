@@ -1,61 +1,35 @@
 #pragma once
-#include <wx/wxprec.h>
-    #ifndef WX_PRECOMP
+
+#ifndef NASH_RESOLVER_MAIN
+#define NASH_RESOLVER_MAIN
+
 #include <wx/wx.h>
-#include <wx/artprov.h>
-#include <wx/xrc/xmlres.h>
-#include <wx/string.h>
-#include <wx/stattext.h>
-#include <wx/gdicmn.h>
-#include <wx/font.h>
-#include <wx/colour.h>
-#include <wx/settings.h>
-#include <wx/grid.h>
-#include <wx/bitmap.h>
-#include <wx/image.h>
-#include <wx/icon.h>
-#include <wx/button.h>
-#include <wx/sizer.h>
-#include <wx/textctrl.h>
-#include <wx/radiobut.h>
-#include <wx/menu.h>
-#include <wx/frame.h>
 #include <wx/richtext/richtextctrl.h>
-#endif
+#include <wx/grid.h>
 
-
-#include "nashResolver.h"
-#include <vector>
-#include <filesystem>
-
-
-
-class mMain : public wxFrame
+class m_main final : public wxFrame
 {
-private:
-	int neP1;
-	int neP2;
-
+    int ne_p1_;
+    int ne_p2_;
 protected:
-	wxGrid* TablaJ1;
-	wxButton* Calcular;
-	wxButton* Limpiar;
-	wxGrid* TablaJ2;
-	wxRichTextCtrl* Resultado;
-	wxRadioButton* Pura;
-	wxCheckBox* invertir;
-	wxMenuBar* m_menubar1;
-	wxMenu* matrices;
-	
-	void ClickCalcular(wxCommandEvent& event);
-	void ClickLimpiar(wxCommandEvent& event);
-	void ClickMatrices(wxCommandEvent& event);
-	void CambiarGrid(wxCommandEvent& event);
+    wxGrid* table_j1_;
+    wxGrid* table_j2_;
+    wxRichTextCtrl* result_;
+    wxRadioButton* mode_;
+    wxCheckBox* invert_;
+    wxMenuBar* menu_bar_;
+    wxMenu* matrix_menu_;
+    wxMenu* help_menu_;
 
+    void click_calculate(wxCommandEvent& event);
+    void click_clear(wxCommandEvent& event);
+    void click_matrix_configuration(wxCommandEvent& event);
+    void click_change_grid_size(wxCommandEvent& event);
+    void click_about(wxCommandEvent& event);
+    void click_run_tests(wxCommandEvent& event);
 public:
-
-	mMain(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("TEORIA DE JUEGOS"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(850, 364), long style = wxDEFAULT_FRAME_STYLE | wxTAB_TRAVERSAL);
-	~mMain();
-
+    explicit m_main(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = wxT("Nash Calculator"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(840, 360), long style = wxDEFAULT_FRAME_STYLE | wxTAB_TRAVERSAL);
+    ~m_main() override;
 };
 
+#endif
